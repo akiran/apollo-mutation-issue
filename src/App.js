@@ -1,11 +1,8 @@
 import React, { Component } from "react";
-import "./App.css";
 import ApolloClient from "apollo-boost";
 import gql from "graphql-tag";
 
-import { ApolloProvider, Query, Mutation, graphql } from "react-apollo";
-import { load } from "protobufjs";
-import { runInThisContext } from "vm";
+import { ApolloProvider, graphql } from "react-apollo";
 
 const client = new ApolloClient({
   uri: "http://localhost:4000/graphql"
@@ -31,14 +28,21 @@ const mutationQuery = gql`
 
 class Name extends React.Component {
   changeHandler(e) {
-    client
-      .mutate({
-        mutation: mutationQuery,
-        variables: { name: e.target.value }
-      })
-      .then(res => {
-        console.log("mutaiton res", res);
-      });
+    client.mutate({
+      mutation: mutationQuery,
+      variables: { name: e.target.value },
+      optimisticResponse: {
+        __typename: "Mutation",
+        updateName: {
+          __typename: "User",
+          id: 1,
+          name: e.target.value
+        }
+      },
+      update: (cache, { data }) => {
+        console.log("mutation update", data);
+      }
+    });
   }
   render() {
     const { user, loading } = this.props.data;
@@ -47,12 +51,14 @@ class Name extends React.Component {
     }
     return (
       <div>
-        {user.name}
-        <input
-          placeholder="name"
-          value={user.name}
-          onChange={this.changeHandler}
-        />
+        <div style={{ height: 20 }}>{user.name}</div>
+        <div>
+          <input
+            placeholder="name"
+            value={user.name}
+            onChange={this.changeHandler}
+          />
+        </div>
       </div>
     );
   }
@@ -67,7 +73,6 @@ class App extends Component {
         <div className="App">
           <div>Hello</div>
           <NameContainer />
-          {/* <NameInput /> */}
         </div>
       </ApolloProvider>
     );

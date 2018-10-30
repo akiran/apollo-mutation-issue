@@ -19,7 +19,7 @@ const typeDefs = gql`
 
 let user = {
   id: 1,
-  name: "john"
+  name: ""
 };
 
 const resolvers = {
@@ -28,7 +28,7 @@ const resolvers = {
   },
   Mutation: {
     updateName: async (root, args) => {
-      await sleep(10);
+      await sleep(10000);
       user.name = args.name;
       return user;
     }
